@@ -13,6 +13,12 @@
         android:theme="@style/Theme.MyApplication_Firebase"
         tools:targetApi="31">
         <activity
+            android:name=".Profil"
+            android:exported="false" />
+        <activity
+            android:name=".ApresConnexion"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
@@ -21,6 +27,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".Connexion"
+            android:exported="false" />
     </application>
 
 </manifest>
