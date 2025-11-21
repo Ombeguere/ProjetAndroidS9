@@ -19,6 +19,9 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
@@ -43,8 +46,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private EditText mdp;
 
     private static final int PICK_IMAGE_REQUEST = 1;
-    private Uri imageUri; // Uri de l'image sélectionnée
-
+    private Uri imageUri;
     ImageView profileImage;
 
     @Override
@@ -62,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         prenom = findViewById(R.id.prenom);
         email = findViewById(R.id.email);
         mdp = findViewById(R.id.mdp);
+
         inscriptionButton = findViewById(R.id.inscription);
         inscriptionButton.setOnClickListener(this);
 
@@ -86,6 +89,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String emailText = email.getText().toString();
         String mdpText = mdp.getText().toString();
 
+        if (emailText.isEmpty() || mdpText.isEmpty() || nom.getText().toString().isEmpty() || prenom.getText().toString().isEmpty()) {
+            Toast.makeText(this, "Veuillez remplir tous les champs", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         // Création de l'utilisateur Firebase Auth
         auth.createUserWithEmailAndPassword(emailText, mdpText)
                 .addOnCompleteListener(task -> {
@@ -93,28 +101,55 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         FirebaseUser user = auth.getCurrentUser();
                         String uid = user.getUid();
 
+                        // Crée le document utilisateur avec un profileUrl vide
                         Map<String, Object> newUser = new HashMap<>();
                         newUser.put("nom", nom.getText().toString());
                         newUser.put("prenom", prenom.getText().toString());
                         newUser.put("email", emailText);
-                        newUser.put("favoris", new ArrayList<>());  // liste vide
+                        newUser.put("favoris", new ArrayList<>()); // liste vide
+                        newUser.put("profileUrl", ""); // toujours présent
 
-                        db.collection("utilisateurs").document(uid).set(newUser)
+                        db.collection("utilisateurs").document(uid)
+                                .set(newUser)
                                 .addOnSuccessListener(unused -> {
-                                    Toast.makeText(MainActivity.this, "Inscription réussie", Toast.LENGTH_LONG).show();
+                                    if (imageUri != null) {
+                                        // Upload de l'image si elle est choisie
+                                        StorageReference storageRef = FirebaseStorage.getInstance()
+                                                .getReference("profileImages/" + uid + ".jpg");
 
-                                    // Déconnexion automatique pour obliger à passer par la connexion
-                                    auth.signOut();
-                                    // Rediriger vers la page de connexion après inscription
-                                    Intent intent = new Intent(this, Connexion.class);
-                                    startActivity(intent);
-                                    finish();
+                                        storageRef.putFile(imageUri)
+                                                .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl()
+                                                        .addOnSuccessListener(uri -> {
+                                                            // Mettre à jour Firestore avec l'URL
+                                                            db.collection("utilisateurs").document(uid)
+                                                                    .update("profileUrl", uri.toString())
+                                                                    .addOnSuccessListener(unused2 -> {
+                                                                        Toast.makeText(MainActivity.this,
+                                                                                "Inscription réussie", Toast.LENGTH_LONG).show();
+                                                                        auth.signOut();
+                                                                        startActivity(new Intent(this, Connexion.class));
+                                                                        finish();
+                                                                    })
+                                                                    .addOnFailureListener(e -> {
+                                                                        Toast.makeText(this, "Erreur lors de l'update de l'image", Toast.LENGTH_SHORT).show();
+                                                                    });
+                                                        })
+                                                )
+                                                .addOnFailureListener(e -> {
+                                                    Toast.makeText(this, "Erreur upload image", Toast.LENGTH_SHORT).show();
+                                                });
+                                    } else {
+                                        // Pas de photo → redirection immédiate
+                                        Toast.makeText(this, "Inscription réussie", Toast.LENGTH_LONG).show();
+                                        auth.signOut();
+                                        startActivity(new Intent(this, Connexion.class));
+                                        finish();
+                                    }
                                 })
                                 .addOnFailureListener(e -> {
                                     Log.e("Firebase", "Erreur Firestore : " + e.getMessage());
                                     Toast.makeText(this, "Erreur d’enregistrement", Toast.LENGTH_SHORT).show();
                                 });
-
                     } else {
                         Toast.makeText(this, "Erreur : " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                     }

@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation ("com.google.firebase:firebase-auth:22.1.1")
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.storage)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
