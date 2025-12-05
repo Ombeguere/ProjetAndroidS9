@@ -1,56 +1,49 @@
 package com.example.myapplication_firebase;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button; // NOUVEAU
-import android.widget.ImageButton;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
-import android.widget.Toast; // NOUVEAU
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.bumptech.glide.Glide; // NÉCESSAIRE pour les images
-import com.google.firebase.auth.FirebaseAuth; // NÉCESSAIRE pour l'UID utilisateur
+import com.google.firebase.auth.FirebaseAuth;
 import java.util.List;
 
 public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceViewHolder> {
 
     private List<Annonce> annonces;
     private Context context;
-    private FavoriteDbHelper dbHelper; // 🚨 NOUVEAU : POUR FAVORIS HORS LIGNE (SQLite)
-    private FirebaseAuth mAuth; // 🚨 NOUVEAU : POUR RÉCUPÉRER L'UTILISATEUR
+    private FavoriteDbHelper dbHelper;
+    private FirebaseAuth mAuth;
 
     public AnnonceAdapter(List<Annonce> annonces, Context context) {
         this.annonces = annonces;
         this.context = context;
-        this.dbHelper = new FavoriteDbHelper(context); // Initialisation de SQLite
-        this.mAuth = FirebaseAuth.getInstance(); // Initialisation de Firebase Auth
+        this.dbHelper = new FavoriteDbHelper(context);
+        this.mAuth = FirebaseAuth.getInstance();
     }
 
     public static class AnnonceViewHolder extends RecyclerView.ViewHolder {
         public ImageView imageAnnonce;
-        public TextView textAdresse;
-        public TextView textDescription;
+        public TextView textAdresse, textDescription, textSuperficie, textPieces;
         public RatingBar ratingBar;
-        public TextView textSuperficie;
-        public TextView textPieces;
-        public ImageButton favoriteBtn; // Gardé pour l'ID, mais masqué dans le XML
-        public Button rateBtn; // 🚨 NOUVEAU : Utilisé comme bouton "Favoris"
+        public Button favoriteBtn;
 
         public AnnonceViewHolder(View itemView) {
             super(itemView);
             imageAnnonce = itemView.findViewById(R.id.image_annonce);
             textAdresse = itemView.findViewById(R.id.text_adresse);
             textDescription = itemView.findViewById(R.id.text_description);
-            ratingBar = itemView.findViewById(R.id.rating_bar_moyenne);
             textSuperficie = itemView.findViewById(R.id.text_superficie);
             textPieces = itemView.findViewById(R.id.text_pieces);
+            ratingBar = itemView.findViewById(R.id.rating_bar_moyenne);
             favoriteBtn = itemView.findViewById(R.id.favorite_btn);
-            rateBtn = itemView.findViewById(R.id.rate_btn); // NOUVEAU
         }
     }
 
@@ -63,8 +56,8 @@ public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceV
 
     @Override
     public void onBindViewHolder(@NonNull AnnonceViewHolder holder, int position) {
-        final Annonce annonce = annonces.get(position);
-        final String annonceId = annonce.getDocumentId();
+        Annonce annonce = annonces.get(position);
+        String annonceId = annonce.getDocumentId();
 
         holder.textAdresse.setText(annonce.getAdresse());
         holder.textDescription.setText(annonce.getDescription());
@@ -72,53 +65,36 @@ public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceV
         holder.textPieces.setText(annonce.getPieces() + " pièces");
         holder.ratingBar.setRating(annonce.getNoteMoyenne());
 
-        // 🖼️ Chargement de l'image (maintenant activé)
-        if (annonce.getImageUrl() != null && !annonce.getImageUrl().isEmpty()) {
-            Glide.with(context).load(annonce.getImageUrl()).into(holder.imageAnnonce);
-        } // Pas de 'else' pour ne pas écraser l'image si elle n'existe pas
+        // Redirection vers RatingActivity au clic sur la RatingBar
+        holder.ratingBar.setOnClickListener(v -> {
+            Intent intent = new Intent(context, RatingActivity.class);
+            intent.putExtra("ANNONCE_ID", annonceId);
+            intent.putExtra("ANNONCE_ADRESSE", annonce.getAdresse());
+            context.startActivity(intent);
+        });
 
-        // ❤️ GESTION DES FAVORIS AVEC LE BOUTON TEXTE (rate_btn)
+        // Gestion des favoris
         boolean isFavorite = dbHelper.isFavorite(annonceId);
+        holder.favoriteBtn.setText(isFavorite ? "Retirer des Favoris" : "Ajouter aux Favoris");
 
-        if (isFavorite) {
-            holder.rateBtn.setText("Retirer des Favoris");
-        } else {
-            // Le bouton affichera "Favoris" par défaut, ou on peut le rendre plus explicite:
-            holder.rateBtn.setText("Ajouter aux Favoris");
-        }
-
-        // Le bouton rate_btn gère désormais la logique des favoris.
-        holder.rateBtn.setOnClickListener(v -> {
-            // Note: On passe le bouton texte au lieu de l'ImageButton
-            toggleFavoriteStatus(annonceId, holder.rateBtn);
-        });
-
-        // Clic sur l'élément complet pour la vue détaillée (inchangé)
-        holder.itemView.setOnClickListener(v -> {
-            // Logique pour ouvrir la vue détaillée de l'annonce
-        });
+        holder.favoriteBtn.setOnClickListener(v -> toggleFavoriteStatus(annonceId, holder.favoriteBtn));
     }
 
-    // Méthode modifiée pour accepter un 'Button' et changer son texte.
     private void toggleFavoriteStatus(String annonceId, Button button) {
-        String currentUserId = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : null;
-
-        if (currentUserId == null) {
+        String userId = mAuth.getCurrentUser() != null ? mAuth.getCurrentUser().getUid() : null;
+        if (userId == null) {
             Toast.makeText(context, "Veuillez vous connecter pour gérer les favoris.", Toast.LENGTH_SHORT).show();
             return;
         }
-
         if (dbHelper.isFavorite(annonceId)) {
-            // Retirer des favoris
             dbHelper.removeFavorite(annonceId);
-            button.setText("Ajouter aux Favoris"); // 🚨 Mise à jour du texte
+            button.setText("Ajouter aux Favoris");
             Toast.makeText(context, "Retiré des favoris.", Toast.LENGTH_SHORT).show();
         } else {
-            // Ajouter aux favoris
-            boolean success = dbHelper.addFavorite(annonceId, currentUserId);
+            boolean success = dbHelper.addFavorite(annonceId, userId);
             if (success) {
-                button.setText("Retirer des Favoris"); // 🚨 Mise à jour du texte
-                Toast.makeText(context, "Ajouté aux favoris (Hors Ligne).", Toast.LENGTH_SHORT).show();
+                button.setText("Retirer des Favoris");
+                Toast.makeText(context, "Ajouté aux favoris.", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(context, "Erreur lors de l'ajout aux favoris.", Toast.LENGTH_SHORT).show();
             }

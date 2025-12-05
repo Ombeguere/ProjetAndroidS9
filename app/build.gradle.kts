@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
 
-    alias(libs.plugins.ksp)
 }
 
 android {
@@ -45,8 +44,6 @@ dependencies {
     implementation ("com.google.firebase:firebase-auth:22.1.1")
     implementation(libs.firebase.auth)
     implementation(libs.firebase.storage)
-    implementation("com.github.bumptech.glide:glide:4.16.0")
-    ksp("com.github.bumptech.glide:compiler:4.16.0") version "1.9.22-1.0.17"
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
