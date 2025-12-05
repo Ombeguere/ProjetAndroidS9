@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="8dp">
+
+        <ImageView
+            android:id="@+id/image_annonce"
+            android:layout_width="0dp"
+            android:layout_height="180dp"
+            android:scaleType="centerCrop"
+            android:background="#E0E0E0"
+            android:contentDescription="Photo du logement"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:src="@drawable/ic_launcher_background" />
+
+        <ImageButton
+            android:id="@+id/favorite_btn"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="Ajouter aux favoris"
+            android:src="@drawable/ic_favorite_border"
+            android:padding="12dp"
+            android:visibility="gone" app:layout_constraintTop_toTopOf="@+id/image_annonce"
+            app:layout_constraintEnd_toEndOf="@+id/image_annonce"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"/>
+
+        <TextView
+            android:id="@+id/text_adresse"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="8dp"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintTop_toBottomOf="@id/image_annonce"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/rating_bar_moyenne"
+            tools:text="12 Rue du Manoir, 76100 Rouen" />
+
+        <RatingBar
+            android:id="@+id/rating_bar_moyenne"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            style="?android:attr/ratingBarStyleSmall"
+            android:numStars="5"
+            android:rating="4.5"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/image_annonce" />
+
+        <TextView
+            android:id="@+id/text_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            app:layout_constraintTop_toBottomOf="@id/text_adresse"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="Appartement lumineux entièrement rénové avec balcon, idéal pour étudiant." />
+
+        <TextView
+            android:id="@+id/text_superficie"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:textColor="?attr/colorPrimary"
+            android:drawablePadding="4dp"
+            app:drawableStartCompat="@drawable/ic_square_meters"
+            app:layout_constraintTop_toBottomOf="@id/text_description"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="25 m²" />
+
+        <TextView
+            android:id="@+id/text_pieces"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:textColor="?attr/colorPrimary"
+            android:drawablePadding="4dp"
+            app:drawableStartCompat="@drawable/ic_rooms"
+            app:layout_constraintTop_toBottomOf="@id/text_description"
+            app:layout_constraintStart_toEndOf="@id/text_superficie"
+            tools:text="2 pièces" />
+
+        <Button
+            android:id="@+id/rate_btn"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:text="Favoris"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/text_superficie"
+            app:layout_constraintBottom_toBottomOf="@id/text_superficie" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>
