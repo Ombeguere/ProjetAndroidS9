@@ -30,6 +30,9 @@
         <activity
             android:name=".Connexion"
             android:exported="false" />
+        <activity
+            android:name=".AjoutAnnonce"
+            android:exported="false" />
     </application>
 
 </manifest>

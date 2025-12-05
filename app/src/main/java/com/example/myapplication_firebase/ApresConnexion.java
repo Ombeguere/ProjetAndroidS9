@@ -17,6 +17,7 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
     private Button logoutButton;
     private Button profilButton;
     private FirebaseAuth auth;
+    private Button addLogementBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,9 +33,11 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
         auth = FirebaseAuth.getInstance();
         logoutButton = findViewById(R.id.logoutBtn);
         profilButton = findViewById(R.id.profilBtn);
+        addLogementBtn = findViewById(R.id.addLogementBtn);
 
         logoutButton.setOnClickListener(this);
         profilButton.setOnClickListener(this);
+        addLogementBtn.setOnClickListener(this);
     }
     @Override
     public void onClick(View v) {
@@ -47,6 +50,11 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
         } else if (v == profilButton) {
             // Redirection vers la page de profil
             Intent intent = new Intent(this, Profil.class);
+            startActivity(intent);
+        }
+        else if (v == addLogementBtn) {
+            // Redirection vers la page de profil
+            Intent intent = new Intent(this, AjoutAnnonce.class);
             startActivity(intent);
         }
     }
