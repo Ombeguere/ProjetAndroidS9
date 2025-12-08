@@ -20,6 +20,7 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
     private Button addLogementBtn;
     private Button viewLogementsBtn;
     private Button viewFavoritesBtn;
+    private Button viewOnMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,12 +39,15 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
         addLogementBtn = findViewById(R.id.addLogementBtn);
         viewLogementsBtn = findViewById(R.id.viewLogementsBtn);
         viewFavoritesBtn = findViewById(R.id.viewFavoritesBtn);
+        viewOnMap = findViewById(R.id.viewMapBtn);
+
 
         logoutButton.setOnClickListener(this);
         profilButton.setOnClickListener(this);
         addLogementBtn.setOnClickListener(this);
         viewLogementsBtn.setOnClickListener(this);
         viewFavoritesBtn.setOnClickListener(this);
+        viewOnMap.setOnClickListener(this);
     }
     @Override
     public void onClick(View v) {
@@ -71,6 +75,10 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
         else if (v == viewFavoritesBtn) {
             // Redirection vers la page des favoris
             Intent intent = new Intent(this, FavoritesActivity.class);
+            startActivity(intent);
+        }else if (v == viewOnMap) {
+            // Redirection vers la page de map
+            Intent intent = new Intent(this, MapActivity.class);
             startActivity(intent);
         }
     }

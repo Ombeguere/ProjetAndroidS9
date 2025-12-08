@@ -29,12 +29,21 @@
         android:layout_marginTop="32dp"/>
 
     <Button
-        android:id="@+id/viewFavoritesBtn"
-        android:text="Voir mes favoris"
+        android:id="@+id/viewMapBtn"
+        android:text="Voir sur la carte"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@+id/viewLogementsBtn"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp"/>
+
+    <Button
+        android:id="@+id/viewFavoritesBtn"
+        android:text="Voir mes favoris"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/viewMapBtn"  app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="24dp"/>
 
