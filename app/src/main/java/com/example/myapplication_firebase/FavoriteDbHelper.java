@@ -6,7 +6,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-
+import java.util.ArrayList;
+import java.util.List;
 public class FavoriteDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "Favorites.db";
@@ -90,5 +91,28 @@ public class FavoriteDbHelper extends SQLiteOpenHelper {
         cursor.close();
         db.close();
         return isFav;
+    }
+
+    public List<String> getAllFavoriteIds() {
+        List<String> favoriteIds = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Requête pour récupérer uniquement les IDs d'annonces
+        // On suppose que l'utilisateur est unique ou que la colonne user_id est déjà filtrée ou non nécessaire pour la lecture
+        String selectQuery = "SELECT " + COLUMN_ANNONCE_ID + " FROM " + TABLE_FAVORITES;
+
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if (cursor.moveToFirst()) {
+            int annonceIdIndex = cursor.getColumnIndex(COLUMN_ANNONCE_ID);
+            if (annonceIdIndex != -1) {
+                do {
+                    favoriteIds.add(cursor.getString(annonceIdIndex));
+                } while (cursor.moveToNext());
+            }
+        }
+        cursor.close();
+        db.close();
+        return favoriteIds;
     }
 }

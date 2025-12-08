@@ -1,29 +1,50 @@
 package com.example.myapplication_firebase;
 
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+
 import java.util.HashMap;
 import java.util.Map;
 
-public class RatingActivity extends AppCompatActivity {
+public class RatingActivity extends AppCompatActivity implements View.OnClickListener {
 
     private String annonceId;
     private String annonceAdresse;
     private RatingBar ratingInput;
+    private EditText commentInput;
     private FirebaseUser user;
+    private Button submitButton;
+    private Button btnBack;
+
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rating);
+
+        db = FirebaseFirestore.getInstance();
+
+        TextView textAdresse = findViewById(R.id.text_annonce_adresse);
+        ratingInput = findViewById(R.id.rating_input);
+        commentInput = findViewById(R.id.comment_input);
+        submitButton = findViewById(R.id.btn_submit_rating);
+        btnBack = findViewById(R.id.btn_back);
+
+        btnBack.setOnClickListener(this);
 
         user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
@@ -32,54 +53,83 @@ public class RatingActivity extends AppCompatActivity {
             return;
         }
 
-        // 1. Récupération des données de l'Intent
         annonceId = getIntent().getStringExtra("ANNONCE_ID");
         annonceAdresse = getIntent().getStringExtra("ANNONCE_ADRESSE");
 
-        // 2. Initialisation des vues
-        TextView textAdresse = findViewById(R.id.text_annonce_adresse);
-        ratingInput = findViewById(R.id.rating_input);
-        Button btnSubmit = findViewById(R.id.btn_submit_rating);
-
         textAdresse.setText(annonceAdresse);
 
-        // 3. Logique de soumission
-        btnSubmit.setOnClickListener(v -> submitRating());
+        submitButton.setOnClickListener(v -> submitRating());
     }
 
     private void submitRating() {
-        if (ratingInput.getRating() == 0) {
+        float note = ratingInput.getRating();
+        String commentaire = commentInput.getText().toString().trim();
+
+        if (note == 0) {
             Toast.makeText(this, "Veuillez donner une note.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        float note = ratingInput.getRating();
         String userId = user.getUid();
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        // Stocker l'avis dans une sous-collection de l'annonce
-        db.collection("annonces")
-                .document(annonceId)
-                .collection("avis")
-                .document(userId) // Utiliser l'UID comme ID de document pour écraser l'ancienne note
-                .set(createAvisMap(userId, note, annonceId))
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Note soumise. Mise à jour de la moyenne en cours...", Toast.LENGTH_LONG).show();
-                    // 🚨 Étape suivante: La note moyenne doit être recalculée (voir point 3 ci-dessous)
-                    finish();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Erreur lors de la soumission.", Toast.LENGTH_SHORT).show();
-                });
-    }
-
-    // Utiliser une Map pour la compatibilité Firestore
-    private Map<String, Object> createAvisMap(String userId, float note, String annonceId) {
         Map<String, Object> avisMap = new HashMap<>();
         avisMap.put("userId", userId);
         avisMap.put("note", note);
+        avisMap.put("commentaire", commentaire); // Nouveau champ
         avisMap.put("annonceId", annonceId);
-        return avisMap;
+
+        db.collection("annonce") // Collection principale des annonces
+                .document(annonceId)
+                .collection("avis") // Sous-collection d'avis
+                .document(userId) // L'UID comme identifiant pour écraser l'ancienne note
+                .set(avisMap)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Note et commentaire soumis.", Toast.LENGTH_SHORT).show();
+                    recalculeMoyenne();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Erreur lors de la soumission.", Toast.LENGTH_SHORT).show()
+                );
+    }
+
+    private void recalculeMoyenne() {
+        CollectionReference avisRef = db.collection("annonce")
+                .document(annonceId)
+                .collection("avis");
+
+        avisRef.get().addOnSuccessListener(querySnapshot -> {
+            float somme = 0;
+            int count = 0;
+
+            for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                Double note = document.getDouble("note");
+                if (note != null) {
+                    somme += note;
+                    count++;
+                }
+            }
+
+            float moyenne = count > 0 ? somme / count : 0;
+
+            Map<String, Object> updateMap = new HashMap<>();
+            updateMap.put("noteMoyenne", moyenne);
+
+            db.collection("annonce")
+                    .document(annonceId)
+                    .update(updateMap)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(this, "Note moyenne mise à jour: " + String.format("%.1f", moyenne), Toast.LENGTH_SHORT).show();
+                        finish();
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(this, "Erreur mise à jour moyenne.", Toast.LENGTH_SHORT).show());
+
+        }).addOnFailureListener(e -> Toast.makeText(this, "Erreur récupération avis.", Toast.LENGTH_SHORT).show());
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v == btnBack) {
+            finish();
+        }
     }
 }

@@ -11,11 +11,14 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 public class Connexion extends AppCompatActivity implements View.OnClickListener {
 
     private EditText emailEditText, mdpEditText;
@@ -32,6 +35,16 @@ public class Connexion extends AppCompatActivity implements View.OnClickListener
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        try {
+            FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                    .setPersistenceEnabled(true) // Ceci active le cache local de Firestore
+                    .build();
+            FirebaseFirestore.getInstance().setFirestoreSettings(settings);
+        } catch (Exception e) {
+            // Un toast ou un log ici peut être utile si la persistance échoue pour une raison quelconque
+            Log.e("FirebaseInit", "Erreur lors de l'activation de la persistance Firestore", e);
+        }
 
         emailEditText = findViewById(R.id.emailLogin);
         mdpEditText = findViewById(R.id.mdpLogin);

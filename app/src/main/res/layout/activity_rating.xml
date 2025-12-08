@@ -30,7 +30,19 @@
         android:numStars="5"
         android:stepSize="0.5"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="32dp"/>
+        android:layout_marginBottom="24dp"/>
+
+    <!-- Nouveau champ pour le commentaire -->
+    <EditText
+        android:id="@+id/comment_input"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:hint="Laisser un commentaire..."
+        android:gravity="top|start"
+        android:inputType="textMultiLine"
+        android:padding="8dp"
+        android:background="@drawable/edittext_background"
+        android:layout_marginBottom="24dp"/>
 
     <Button
         android:id="@+id/btn_submit_rating"
@@ -38,4 +50,11 @@
         android:layout_height="wrap_content"
         android:text="Soumettre la note"/>
 
+    <Button
+        android:id="@+id/btn_back"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Retour / Annuler"
+        android:textColor="@color/black"/>
 </LinearLayout>

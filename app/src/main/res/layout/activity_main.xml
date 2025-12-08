@@ -8,7 +8,6 @@
     android:background="#F5F7FA"
     tools:context=".MainActivity">
 
-    <!-- Titre -->
     <TextView
         android:id="@+id/title"
         android:layout_width="wrap_content"
@@ -20,9 +19,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="80dp" />
+        android:layout_marginTop="50dp" />
 
-    <!-- Sous-titre -->
     <TextView
         android:id="@+id/subtitle"
         android:layout_width="wrap_content"
@@ -35,7 +33,21 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp" />
 
-    <!-- Champ Nom -->
+    <ImageView
+        android:id="@+id/profileImage"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/ic_baseline_person_24"
+        android:contentDescription="Photo profil"
+        android:scaleType="centerCrop"
+        android:background="@drawable/circle_background"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintTop_toBottomOf="@id/subtitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <EditText
         android:id="@+id/nom"
         android:layout_width="0dp"
@@ -44,13 +56,12 @@
         android:padding="12dp"
         android:background="@drawable/edittext_background"
         android:inputType="textPersonName"
-        app:layout_constraintTop_toBottomOf="@id/subtitle"
+        app:layout_constraintTop_toBottomOf="@id/profileImage"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:layout_marginHorizontal="32dp" />
 
-    <!-- Champ Prénom -->
     <EditText
         android:id="@+id/prenom"
         android:layout_width="0dp"
@@ -62,10 +73,9 @@
         app:layout_constraintTop_toBottomOf="@id/nom"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:layout_marginHorizontal="32dp" />
 
-    <!-- Champ Email -->
     <EditText
         android:id="@+id/email"
         android:layout_width="0dp"
@@ -77,10 +87,9 @@
         app:layout_constraintTop_toBottomOf="@id/prenom"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:layout_marginHorizontal="32dp" />
 
-    <!-- Champ Mot de passe -->
     <EditText
         android:id="@+id/mdp"
         android:layout_width="0dp"
@@ -92,10 +101,9 @@
         app:layout_constraintTop_toBottomOf="@id/email"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:layout_marginHorizontal="32dp" />
 
-    <!-- Bouton S'inscrire -->
     <Button
         android:id="@+id/inscription"
         android:layout_width="0dp"
@@ -109,10 +117,9 @@
         app:layout_constraintTop_toBottomOf="@id/mdp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         android:layout_marginHorizontal="32dp" />
 
-    <!-- Lien de connexion -->
     <TextView
         android:id="@+id/dejaCompte"
         android:layout_width="wrap_content"
@@ -124,20 +131,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp" />
-
-    <!-- Photo de profil-->
-    <ImageView
-        android:id="@+id/profileImage"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="16dp"
-        android:src="@drawable/ic_baseline_person_24"
-        android:contentDescription="Photo profil"
-        android:scaleType="centerCrop"
-        android:background="@drawable/circle_background"
-        android:clickable="true"
-        android:focusable="true"
-        tools:ignore="MissingConstraints" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

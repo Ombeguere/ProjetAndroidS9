@@ -41,10 +41,12 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.firebase.firestore)
-    implementation ("com.google.firebase:firebase-auth:22.1.1")
+   // implementation ("com.google.firebase:firebase-auth:22.1.1")
     implementation(libs.firebase.auth)
     implementation(libs.firebase.storage)
+    implementation ("org.osmdroid:osmdroid-android:6.1.20")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
 }

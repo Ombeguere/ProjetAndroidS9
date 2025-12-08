@@ -19,6 +19,7 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
     private FirebaseAuth auth;
     private Button addLogementBtn;
     private Button viewLogementsBtn;
+    private Button viewFavoritesBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,11 +37,13 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
         profilButton = findViewById(R.id.profilBtn);
         addLogementBtn = findViewById(R.id.addLogementBtn);
         viewLogementsBtn = findViewById(R.id.viewLogementsBtn);
+        viewFavoritesBtn = findViewById(R.id.viewFavoritesBtn);
 
         logoutButton.setOnClickListener(this);
         profilButton.setOnClickListener(this);
         addLogementBtn.setOnClickListener(this);
         viewLogementsBtn.setOnClickListener(this);
+        viewFavoritesBtn.setOnClickListener(this);
     }
     @Override
     public void onClick(View v) {
@@ -63,6 +66,11 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
         else if (v == viewLogementsBtn) {
             // Redirection vers la page des annonces
             Intent intent = new Intent(this, ListActivity.class);
+            startActivity(intent);
+        }
+        else if (v == viewFavoritesBtn) {
+            // Redirection vers la page des favoris
+            Intent intent = new Intent(this, FavoritesActivity.class);
             startActivity(intent);
         }
     }

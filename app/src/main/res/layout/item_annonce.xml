@@ -50,14 +50,14 @@
             android:layout_marginEnd="16dp"
             style="?android:attr/ratingBarStyleSmall"
             android:numStars="5"
-            android:rating="4.5"
-            android:isIndicator="true"
+            android:rating="0"
+            android:stepSize="1"
+            android:isIndicator="false"
             android:clickable="true"
             android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:descendantFocusability="blocksDescendants"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/image_annonce" />
+
 
         <!-- Description -->
         <TextView
