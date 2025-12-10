@@ -45,6 +45,8 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.storage)
     implementation ("org.osmdroid:osmdroid-android:6.1.20")
+    implementation(libs.play.services.location)
+    implementation(libs.volley)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

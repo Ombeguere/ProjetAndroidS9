@@ -23,15 +23,23 @@ import java.util.Map;
 
 public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceViewHolder> {
 
+    // NOUVEAU: Interface pour gérer le clic sur l'élément (pas la RatingBar ou le bouton)
+    public interface OnItemClickListener {
+        void onItemClick(String annonceId);
+    }
+
     private List<Annonce> annonces;
     private Context context;
+    private OnItemClickListener listener; // NOUVEAU: Le listener d'activité
     private FavoriteDbHelper dbHelper;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
-    public AnnonceAdapter(List<Annonce> annonces, Context context) {
+    // Mise à jour du constructeur pour accepter le listener
+    public AnnonceAdapter(List<Annonce> annonces, Context context, OnItemClickListener listener) {
         this.annonces = annonces;
         this.context = context;
+        this.listener = listener; // Initialisation du listener
         this.dbHelper = new FavoriteDbHelper(context);
         this.mAuth = FirebaseAuth.getInstance();
         this.db = FirebaseFirestore.getInstance();
@@ -66,14 +74,26 @@ public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceV
     @Override
     public void onBindViewHolder(@NonNull AnnonceViewHolder holder, int position) {
         Annonce annonce = annonces.get(position);
-        String annonceId = annonce.getDocumentId();
+        final String annonceId = annonce.getDocumentId();
 
+        // Lier les données
         holder.textAdresse.setText(annonce.getAdresse());
         holder.textDescription.setText(annonce.getDescription());
-        holder.textSuperficie.setText(annonce.getSuperficie() + " m²");
-        holder.textPieces.setText(annonce.getPieces() + " pièces");
+        holder.textSuperficie.setText(annonce.getSuperficie() != null ? annonce.getSuperficie() + " m²" : "N/A");
+        holder.textPieces.setText(annonce.getPieces() != null ? annonce.getPieces() + " pièces" : "N/A");
         holder.ratingBar.setRating(annonce.getNoteMoyenne());
 
+        // TODO: Charger l'image avec Glide/Picasso en utilisant annonce.getImageUrl()
+
+        // GESTION DU CLIC POUR LES DÉTAILS DE L'ANNONCE
+        // Le clic sur l'itemView lance l'activité de détail
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(annonceId);
+            }
+        });
+
+        // GESTION DU CLIC POUR LA NOTATION (RatingBar)
         holder.ratingBar.setOnTouchListener((v, event) -> {
             Intent intent = new Intent(context, RatingActivity.class);
             intent.putExtra("ANNONCE_ID", annonceId);
@@ -82,6 +102,7 @@ public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceV
             return true;
         });
 
+        // GESTION DU CLIC FAVORIS
         boolean isFavorite = dbHelper.isFavorite(annonceId);
         holder.favoriteBtn.setText(isFavorite ? "Retirer des Favoris" : "Ajouter aux Favoris");
 

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".DetailAnnonceActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/detail_image"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:scaleType="centerCrop"
+            android:layout_marginBottom="16dp"
+            android:background="#E0E0E0"
+            android:contentDescription="Image de l'annonce"
+            tools:src="@tools:sample/avatars" />
+
+        <TextView
+            android:id="@+id/detail_titre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            tools:text="Appartement T2 Rénové - Centre Ville" />
+
+        <TextView
+            android:id="@+id/detail_prix"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:textColor="?attr/colorPrimary"
+            android:layout_marginBottom="16dp"
+            tools:text="850.00 € / mois" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Adresse:"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/detail_adresse"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            tools:text="12 Rue des Roses, 76000 Rouen" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Superficie: "
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/detail_superficie"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="20dp"
+                tools:text="45 m²" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pièces: "
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/detail_pieces"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="2 pièces" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Description:"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/detail_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            tools:text="Charmant appartement lumineux, entièrement meublé, idéalement situé près des transports en commun." />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Équipements:"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/detail_equipements"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            tools:text="Wi-Fi, Climatisation, Réfrigérateur, Four" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Avis et Commentaires"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="10dp"/>
+
+        <Button
+            android:id="@+id/add_comment_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Laisser un commentaire"
+            android:layout_marginBottom="16dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/comments_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_comment" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Informations de trajet"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Distance: "
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/text_distance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="20dp"
+                tools:text="Calcul en cours..." />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Durée: "
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/text_duree_trajet"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Calcul en cours..." />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

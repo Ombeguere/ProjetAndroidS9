@@ -1,27 +1,24 @@
 package com.example.myapplication_firebase;
 
 import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.os.Bundle;
-import android.util.Log;
-import android.widget.Toast;
-
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-import com.google.android.gms.tasks.Task;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListActivity extends AppCompatActivity {
+// L'activité doit IMPLÉMENTER l'interface AnnonceAdapter.OnItemClickListener
+public class ListActivity extends AppCompatActivity implements AnnonceAdapter.OnItemClickListener {
 
     private RecyclerView recyclerView;
-    private AnnonceAdapter annonceAdapter;
-    private List<Annonce> annoncesList;
+    private AnnonceAdapter adapter;
     private FirebaseFirestore db;
+    private List<Annonce> annoncesList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,44 +26,40 @@ public class ListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_list);
 
         db = FirebaseFirestore.getInstance();
-
         recyclerView = findViewById(R.id.recycler_view_annonces);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        annoncesList = new ArrayList<>();
-        annonceAdapter = new AnnonceAdapter(annoncesList, this);
-        recyclerView.setAdapter(annonceAdapter);
-
-        fetchAnnounces();
+        chargerAnnonces();
     }
 
-    private void fetchAnnounces() {
-        db.collection("annonce")
-                .get()
-                .addOnCompleteListener(new com.google.android.gms.tasks.OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            annoncesList.clear();
-
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                // toObject convertit le document Firestore en objet Annonce
-                                Annonce annonce = document.toObject(Annonce.class);
-
-                                // Récupération de l'ID unique du document Firestore
-                                annonce.setDocumentId(document.getId());
-
-                                annoncesList.add(annonce);
-                            }
-
-                            // Actualise l'affichage du RecyclerView
-                            annonceAdapter.notifyDataSetChanged();
-
-                        } else {
-                            Log.e("Firestore", "Erreur lors de la récupération des annonces.", task.getException());
-                            Toast.makeText(ListActivity.this, "Échec du chargement des annonces.", Toast.LENGTH_LONG).show();
+    private void chargerAnnonces() {
+        db.collection("annonce").get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        annoncesList = new ArrayList<>();
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            // Supposons que Annonce a un constructeur vide et les getters/setters nécessaires
+                            Annonce annonce = document.toObject(Annonce.class);
+                            annonce.setDocumentId(document.getId()); // Essentiel : stocker l'ID
+                            annoncesList.add(annonce);
                         }
+
+                        // IMPORTANT: Passer 'this' comme écouteur de clic
+                        adapter = new AnnonceAdapter(annoncesList, this, this);
+                        recyclerView.setAdapter(adapter);
+
+                    } else {
+                        Toast.makeText(this, "Erreur lors du chargement des annonces.", Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    // NOUVEAU: Implémentation de la méthode de l'interface AnnonceAdapter.OnItemClickListener
+    @Override
+    public void onItemClick(String annonceId) {
+        // Logique de navigation vers l'écran de détail
+        Intent intent = new Intent(ListActivity.this, DetailAnnonceActivity.class);
+        intent.putExtra("ANNONCE_ID", annonceId);
+        startActivity(intent);
     }
 }

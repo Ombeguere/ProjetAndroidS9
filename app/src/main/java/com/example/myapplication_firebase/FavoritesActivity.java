@@ -1,5 +1,6 @@
 package com.example.myapplication_firebase;
 
+import android.content.Intent; // Import nécessaire pour Intent
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -20,7 +21,8 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FavoritesActivity extends AppCompatActivity {
+// 1. IMPLÉMENTER l'interface AnnonceAdapter.OnItemClickListener
+public class FavoritesActivity extends AppCompatActivity implements AnnonceAdapter.OnItemClickListener {
 
     private RecyclerView recyclerView;
     private AnnonceAdapter annonceAdapter;
@@ -28,6 +30,8 @@ public class FavoritesActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private FavoriteDbHelper dbHelper;
     private FirebaseAuth mAuth;
+    private static final String TAG = "FavoritesActivity";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +52,9 @@ public class FavoritesActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         annoncesList = new ArrayList<>();
-        annonceAdapter = new AnnonceAdapter(annoncesList, this);
+
+        // 2. CORRECTION DU CONSTRUCTEUR : Ajouter 'this' comme troisième argument (le listener)
+        annonceAdapter = new AnnonceAdapter(annoncesList, this, this);
         recyclerView.setAdapter(annonceAdapter);
 
         if (mAuth.getCurrentUser() == null) {
@@ -94,10 +100,20 @@ public class FavoritesActivity extends AppCompatActivity {
                         annonceAdapter.notifyDataSetChanged();
 
                     } else {
-                        Log.e("Firestore", "Erreur lors de la récupération des annonces favorites.", task.getException());
-                        // Ce message s'affichera si le cache de Firestore est vide ou la requête échoue
+                        Log.e(TAG, "Erreur lors de la récupération des annonces favorites.", task.getException());
                         Toast.makeText(this, "Échec du chargement. Si hors ligne, les données pourraient ne pas avoir été mises en cache.", Toast.LENGTH_LONG).show();
                     }
                 });
+    }
+
+    // 3. Implémentation de la méthode de l'interface AnnonceAdapter.OnItemClickListener
+    @Override
+    public void onItemClick(String annonceId) {
+        Log.d(TAG, "Clic sur l'annonce favorite ID: " + annonceId);
+
+        // Lancer l'activité de détail en passant l'ID de l'annonce
+        Intent intent = new Intent(FavoritesActivity.this, DetailAnnonceActivity.class);
+        intent.putExtra("ANNONCE_ID", annonceId);
+        startActivity(intent);
     }
 }

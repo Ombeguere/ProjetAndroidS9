@@ -33,16 +33,18 @@ import java.util.Map;
 
 public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListener {
 
+    // NOUVEAUX CHAMPS
+    private EditText titre;
+    private EditText prix;
+
     private EditText description;
     private EditText superficie;
     private EditText pieces;
     private CheckBox parkingCheckBox;
-
     private CheckBox wifiCheckBox;
     private CheckBox climatisationCheckBox;
     private Button selectEquipementsBtn;
     private TextView tvEquipementsSummary;
-
     private EditText adresse;
     private Button selectImageBtn;
     private ImageView imagePreview;
@@ -64,6 +66,10 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        // Initialisation des NOUVEAUX CHAMPS
+        titre = findViewById(R.id.titre);
+        prix = findViewById(R.id.prix);
 
         description = findViewById(R.id.description);
         superficie = findViewById(R.id.superficie);
@@ -128,12 +134,33 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
 
     public void ajouterLogement() {
 
-        String desc = description.getText().toString();
-        String sup = superficie.getText().toString();
-        String nbPieces = pieces.getText().toString();
-        String adr = adresse.getText().toString();
+        // NOUVEAU: Récupération du Titre et Prix
+        String titreStr = titre.getText().toString().trim();
+        String prixStr = prix.getText().toString().trim();
+
+        String desc = description.getText().toString().trim();
+        String sup = superficie.getText().toString().trim();
+        String nbPieces = pieces.getText().toString().trim();
+        String adr = adresse.getText().toString().trim();
         boolean parking = parkingCheckBox.isChecked();
 
+        // 1. Validation de base
+        if (titreStr.isEmpty() || prixStr.isEmpty() || desc.isEmpty() || sup.isEmpty() || nbPieces.isEmpty() || adr.isEmpty() || imageUri == null) {
+            Toast.makeText(this, "Veuillez remplir tous les champs obligatoires (Titre, Prix, etc.) et ajouter une image", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // 2. Conversion sécurisée du Prix
+        Double prixDouble;
+        try {
+            prixDouble = Double.parseDouble(prixStr);
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Veuillez entrer un prix valide (numérique).", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+
+        // Gestion des équipements (inchangé)
         List<String> finalEquipementsList = new ArrayList<>(equipementsAdditionnels);
         if (wifiCheckBox.isChecked()) {
             finalEquipementsList.add("Wi-Fi");
@@ -142,10 +169,6 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
             finalEquipementsList.add("Climatisation");
         }
 
-        if (desc.isEmpty() || sup.isEmpty() || nbPieces.isEmpty() || adr.isEmpty() || imageUri == null) {
-            Toast.makeText(this, "Veuillez remplir tous les champs obligatoires et ajouter une image", Toast.LENGTH_SHORT).show();
-            return;
-        }
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
@@ -158,6 +181,11 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
 
         Map<String, Object> annonce = new HashMap<>();
         annonce.put("uid", uid);
+
+        // NOUVEAU: Ajout du Titre et Prix dans Firestore
+        annonce.put("titre", titreStr);
+        annonce.put("prix", prixDouble);
+
         annonce.put("description", desc);
         annonce.put("superficie", sup);
         annonce.put("pieces", nbPieces);
@@ -169,6 +197,7 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
         annonce.put("datePublication", new Date());
         annonce.put("imageUrl", "");
 
+        // Placeholder pour la géolocalisation. Vous devrez la remplacer par une vraie conversion d'adresse
         GeoPoint tempLocation = new GeoPoint(0.0, 0.0);
         annonce.put("location", tempLocation);
 

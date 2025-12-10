@@ -14,6 +14,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
@@ -73,17 +74,17 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
         String userId = user.getUid();
 
         Map<String, Object> avisMap = new HashMap<>();
-        avisMap.put("userId", userId);
+        avisMap.put("userID", userId);
         avisMap.put("note", note);
-        avisMap.put("commentaire", commentaire); // Nouveau champ
+        avisMap.put("commentaire", commentaire);
         avisMap.put("annonceId", annonceId);
+        avisMap.put("timestamp", FieldValue.serverTimestamp());
 
-        db.collection("annonce") // Collection principale des annonces
+        db.collection("annonce")
                 .document(annonceId)
-                .collection("avis") // Sous-collection d'avis
-                .document(userId) // L'UID comme identifiant pour écraser l'ancienne note
-                .set(avisMap)
-                .addOnSuccessListener(aVoid -> {
+                .collection("avis")
+                .add(avisMap) // Utilisation de .add() pour créer un nouveau document et permettre plusieurs avis
+                .addOnSuccessListener(documentReference -> {
                     Toast.makeText(this, "Note et commentaire soumis.", Toast.LENGTH_SHORT).show();
                     recalculeMoyenne();
                 })
@@ -91,7 +92,6 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
                         Toast.makeText(this, "Erreur lors de la soumission.", Toast.LENGTH_SHORT).show()
                 );
     }
-
     private void recalculeMoyenne() {
         CollectionReference avisRef = db.collection("annonce")
                 .document(annonceId)
@@ -100,6 +100,11 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
         avisRef.get().addOnSuccessListener(querySnapshot -> {
             float somme = 0;
             int count = 0;
+
+            // Si vous choisissez de ne compter qu'un seul avis par utilisateur pour la moyenne,
+            // vous devriez modifier cette logique pour utiliser un Map<String, Double> pour
+            // stocker la dernière note de chaque userID avant de calculer la somme.
+            // Pour l'instant, nous conservons la logique qui inclut toutes les notes.
 
             for (DocumentSnapshot document : querySnapshot.getDocuments()) {
                 Double note = document.getDouble("note");

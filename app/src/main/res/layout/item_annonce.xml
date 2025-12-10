@@ -13,7 +13,6 @@
         android:layout_height="wrap_content"
         android:paddingBottom="8dp">
 
-        <!-- Image principale -->
         <ImageView
             android:id="@+id/image_annonce"
             android:layout_width="0dp"
@@ -26,7 +25,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             tools:src="@drawable/ic_launcher_background" />
 
-        <!-- Adresse -->
         <TextView
             android:id="@+id/text_adresse"
             android:layout_width="0dp"
@@ -41,7 +39,6 @@
             app:layout_constraintEnd_toStartOf="@id/rating_bar_moyenne"
             tools:text="12 Rue du Manoir, 76100 Rouen" />
 
-        <!-- Rating -->
         <RatingBar
             android:id="@+id/rating_bar_moyenne"
             android:layout_width="wrap_content"
@@ -59,7 +56,6 @@
             app:layout_constraintTop_toBottomOf="@id/image_annonce" />
 
 
-        <!-- Description -->
         <TextView
             android:id="@+id/text_description"
             android:layout_width="0dp"
@@ -74,7 +70,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             tools:text="Appartement lumineux entièrement rénové avec balcon, idéal pour étudiant." />
 
-        <!-- Superficie -->
         <TextView
             android:id="@+id/text_superficie"
             android:layout_width="wrap_content"
@@ -86,26 +81,21 @@
             app:drawableStartCompat="@drawable/ic_square_meters"
             app:layout_constraintTop_toBottomOf="@id/text_description"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="@id/text_description"
             tools:text="25 m²" />
 
-        <!-- Pièces -->
         <TextView
             android:id="@+id/text_pieces"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
             android:textColor="?attr/colorPrimary"
             android:drawablePadding="4dp"
             app:drawableStartCompat="@drawable/ic_rooms"
             app:layout_constraintTop_toTopOf="@id/text_superficie"
-            app:layout_constraintStart_toEndOf="@id/text_superficie"
             app:layout_constraintBottom_toBottomOf="@id/text_superficie"
-            app:layout_constraintEnd_toStartOf="@id/favorite_btn"
+            app:layout_constraintStart_toEndOf="@id/text_superficie"
             tools:text="2 pièces" />
 
-        <!-- Bouton Favoris -->
         <Button
             android:id="@+id/favorite_btn"
             style="@style/Widget.MaterialComponents.Button.TextButton"
@@ -113,9 +103,10 @@
             android:layout_height="36dp"
             android:text="Ajouter aux Favoris"
             android:layout_marginEnd="16dp"
-            app:layout_constraintBottom_toBottomOf="@id/text_superficie"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/text_superficie" />
+            app:layout_constraintTop_toBottomOf="@id/text_description"
+            app:layout_constraintVertical_bias="0.5" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>
