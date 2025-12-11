@@ -9,21 +9,21 @@ public class Annonce {
     private String adresse;
     private Date datePublication;
     private String description;
-    private String imageurl;
+    private String imageUrlBase64;
     private String pieces;
     private String superficie;
     private String uid;
     private boolean parking;
     private List<String> equipements;
     private GeoPoint location;
-
+    private String titre;
+    private Double prix;
     private float noteMoyenne;
     private String documentId;
 
     public Annonce() {
     }
 
-    // Favoris et ID
     public String getDocumentId() {
         return documentId;
     }
@@ -32,7 +32,6 @@ public class Annonce {
         this.documentId = documentId;
     }
 
-    // Notation
     public float getNoteMoyenne() {
         return noteMoyenne;
     }
@@ -41,7 +40,22 @@ public class Annonce {
         this.noteMoyenne = noteMoyenne;
     }
 
-    // Propriétés de l'Annonce
+    public String getTitre() {
+        return titre;
+    }
+
+    public void setTitre(String titre) {
+        this.titre = titre;
+    }
+
+    public Double getPrix() {
+        return prix;
+    }
+
+    public void setPrix(Double prix) {
+        this.prix = prix;
+    }
+
     public String getAdresse() {
         return adresse;
     }
@@ -74,12 +88,12 @@ public class Annonce {
         this.equipements = equipements;
     }
 
-    public String getImageUrl() {
-        return imageurl;
+    public String getImageUrlBase64() {
+        return imageUrlBase64;
     }
 
-    public void setImageUrl(String imageurl) {
-        this.imageurl = imageurl;
+    public void setImageUrlBase64(String imageUrlBase64) {
+        this.imageUrlBase64 = imageUrlBase64;
     }
 
     public GeoPoint getLocation() {

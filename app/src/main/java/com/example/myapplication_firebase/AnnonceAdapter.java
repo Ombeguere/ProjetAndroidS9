@@ -3,6 +3,10 @@ package com.example.myapplication_firebase;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,23 +27,21 @@ import java.util.Map;
 
 public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceViewHolder> {
 
-    // NOUVEAU: Interface pour gérer le clic sur l'élément (pas la RatingBar ou le bouton)
     public interface OnItemClickListener {
         void onItemClick(String annonceId);
     }
 
     private List<Annonce> annonces;
     private Context context;
-    private OnItemClickListener listener; // NOUVEAU: Le listener d'activité
+    private OnItemClickListener listener;
     private FavoriteDbHelper dbHelper;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
 
-    // Mise à jour du constructeur pour accepter le listener
     public AnnonceAdapter(List<Annonce> annonces, Context context, OnItemClickListener listener) {
         this.annonces = annonces;
         this.context = context;
-        this.listener = listener; // Initialisation du listener
+        this.listener = listener;
         this.dbHelper = new FavoriteDbHelper(context);
         this.mAuth = FirebaseAuth.getInstance();
         this.db = FirebaseFirestore.getInstance();
@@ -54,6 +56,7 @@ public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceV
         public AnnonceViewHolder(View itemView) {
             super(itemView);
             imageAnnonce = itemView.findViewById(R.id.image_annonce);
+            // textAdresse est désormais utilisé pour le TITRE
             textAdresse = itemView.findViewById(R.id.text_adresse);
             textDescription = itemView.findViewById(R.id.text_description);
             textSuperficie = itemView.findViewById(R.id.text_superficie);
@@ -76,33 +79,41 @@ public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceV
         Annonce annonce = annonces.get(position);
         final String annonceId = annonce.getDocumentId();
 
-        // Lier les données
-        holder.textAdresse.setText(annonce.getAdresse());
+        // CORRECTION: Utiliser le titre de l'annonce
+        holder.textAdresse.setText(annonce.getTitre());
+
         holder.textDescription.setText(annonce.getDescription());
         holder.textSuperficie.setText(annonce.getSuperficie() != null ? annonce.getSuperficie() + " m²" : "N/A");
         holder.textPieces.setText(annonce.getPieces() != null ? annonce.getPieces() + " pièces" : "N/A");
         holder.ratingBar.setRating(annonce.getNoteMoyenne());
 
-        // TODO: Charger l'image avec Glide/Picasso en utilisant annonce.getImageUrl()
+        // LOGIQUE D'AFFICHAGE DE L'IMAGE BASE64
+        String base64Image = annonce.getImageUrlBase64();
+        if (base64Image != null && !base64Image.isEmpty()) {
+            Bitmap imageBitmap = decodeBase64ToBitmap(base64Image);
+            if (imageBitmap != null) {
+                holder.imageAnnonce.setImageBitmap(imageBitmap);
+            } else {
+                holder.imageAnnonce.setImageResource(R.drawable.ic_launcher_background);
+            }
+        } else {
+            holder.imageAnnonce.setImageResource(R.drawable.ic_launcher_background);
+        }
 
-        // GESTION DU CLIC POUR LES DÉTAILS DE L'ANNONCE
-        // Le clic sur l'itemView lance l'activité de détail
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onItemClick(annonceId);
             }
         });
 
-        // GESTION DU CLIC POUR LA NOTATION (RatingBar)
         holder.ratingBar.setOnTouchListener((v, event) -> {
             Intent intent = new Intent(context, RatingActivity.class);
             intent.putExtra("ANNONCE_ID", annonceId);
-            intent.putExtra("ANNONCE_ADRESSE", annonce.getAdresse());
+            intent.putExtra("ANNONCE_ADRESSE", annonce.getAdresse()); // Conserver l'adresse pour RatingActivity si nécessaire
             context.startActivity(intent);
             return true;
         });
 
-        // GESTION DU CLIC FAVORIS
         boolean isFavorite = dbHelper.isFavorite(annonceId);
         holder.favoriteBtn.setText(isFavorite ? "Retirer des Favoris" : "Ajouter aux Favoris");
 
@@ -149,6 +160,18 @@ public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceV
             } else {
                 Toast.makeText(context, "Erreur lors de l'ajout aux favoris localement.", Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    // NOUVELLE MÉTHODE POUR DÉCODER LA CHAÎNE BASE64
+    private Bitmap decodeBase64ToBitmap(String base64String) {
+        if (base64String == null || base64String.isEmpty()) return null;
+        try {
+            byte[] decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
+            return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+        } catch (IllegalArgumentException e) {
+            Log.e("Base64Decode", "Chaîne Base64 invalide ou tronquée: " + e.getMessage());
+            return null;
         }
     }
 

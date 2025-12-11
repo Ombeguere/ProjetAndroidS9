@@ -22,8 +22,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,12 +29,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import android.util.Log;
+
+// Imports nécessaires pour le géocodage
+import android.location.Address;
+import android.location.Geocoder;
+import java.util.Locale;
+
+
 public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListener {
 
-    // NOUVEAUX CHAMPS
     private EditText titre;
     private EditText prix;
-
     private EditText description;
     private EditText superficie;
     private EditText pieces;
@@ -67,7 +77,6 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
             return insets;
         });
 
-        // Initialisation des NOUVEAUX CHAMPS
         titre = findViewById(R.id.titre);
         prix = findViewById(R.id.prix);
 
@@ -134,7 +143,6 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
 
     public void ajouterLogement() {
 
-        // NOUVEAU: Récupération du Titre et Prix
         String titreStr = titre.getText().toString().trim();
         String prixStr = prix.getText().toString().trim();
 
@@ -144,13 +152,11 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
         String adr = adresse.getText().toString().trim();
         boolean parking = parkingCheckBox.isChecked();
 
-        // 1. Validation de base
         if (titreStr.isEmpty() || prixStr.isEmpty() || desc.isEmpty() || sup.isEmpty() || nbPieces.isEmpty() || adr.isEmpty() || imageUri == null) {
             Toast.makeText(this, "Veuillez remplir tous les champs obligatoires (Titre, Prix, etc.) et ajouter une image", Toast.LENGTH_LONG).show();
             return;
         }
 
-        // 2. Conversion sécurisée du Prix
         Double prixDouble;
         try {
             prixDouble = Double.parseDouble(prixStr);
@@ -159,8 +165,6 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-
-        // Gestion des équipements (inchangé)
         List<String> finalEquipementsList = new ArrayList<>(equipementsAdditionnels);
         if (wifiCheckBox.isChecked()) {
             finalEquipementsList.add("Wi-Fi");
@@ -168,6 +172,28 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
         if (climatisationCheckBox.isChecked()) {
             finalEquipementsList.add("Climatisation");
         }
+
+        String base64Image = encodeImageToBase64(imageUri);
+        if (base64Image == null || base64Image.isEmpty()) {
+            Toast.makeText(this, "Erreur lors de l'encodage de l'image.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // DÉBUT DE LA LOGIQUE DE GÉOCODAGE
+        GeoPoint location;
+        try {
+            location = getLocationFromAddress(adr);
+        } catch (IOException e) {
+            Toast.makeText(this, "Erreur de géocodage (réseau).", Toast.LENGTH_LONG).show();
+            Log.e("GEOCODING", "Erreur réseau lors du géocodage: " + e.getMessage());
+            return;
+        }
+
+        if (location == null) {
+            Toast.makeText(this, "Adresse non valide ou introuvable. Veuillez vérifier l'adresse.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        // FIN DE LA LOGIQUE DE GÉOCODAGE
 
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -181,58 +207,57 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
 
         Map<String, Object> annonce = new HashMap<>();
         annonce.put("uid", uid);
-
-        // NOUVEAU: Ajout du Titre et Prix dans Firestore
         annonce.put("titre", titreStr);
         annonce.put("prix", prixDouble);
-
         annonce.put("description", desc);
         annonce.put("superficie", sup);
         annonce.put("pieces", nbPieces);
-
         annonce.put("equipements", finalEquipementsList);
-
         annonce.put("adresse", adr);
         annonce.put("parking", parking);
         annonce.put("datePublication", new Date());
-        annonce.put("imageUrl", "");
 
-        // Placeholder pour la géolocalisation. Vous devrez la remplacer par une vraie conversion d'adresse
-        GeoPoint tempLocation = new GeoPoint(0.0, 0.0);
-        annonce.put("location", tempLocation);
+        annonce.put("imageUrlBase64", base64Image);
+
+        // Utiliser la location réelle
+        annonce.put("location", location); // <--- Correction
 
         db.collection("annonce").add(annonce)
                 .addOnSuccessListener(documentReference -> {
-
-                    String annonceId = documentReference.getId();
-                    StorageReference storageRef = FirebaseStorage.getInstance()
-                            .getReference("annonceImages/" + annonceId + ".jpg");
-
-                    storageRef.putFile(imageUri)
-                            .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl()
-                                    .addOnSuccessListener(uri -> {
-
-                                        db.collection("annonce").document(annonceId)
-                                                .update("imageUrl", uri.toString())
-                                                .addOnSuccessListener(unused -> {
-                                                    Toast.makeText(AjoutAnnonce.this,
-                                                            "Annonce ajoutée avec succès",
-                                                            Toast.LENGTH_LONG).show();
-                                                    finish();
-                                                })
-                                                .addOnFailureListener(e ->
-                                                        Toast.makeText(this, "Erreur mise à jour image", Toast.LENGTH_SHORT).show()
-                                                );
-                                    })
-                            )
-                            .addOnFailureListener(e ->
-                                    Toast.makeText(this, "Erreur upload image", Toast.LENGTH_SHORT).show()
-                            );
-
+                    Toast.makeText(AjoutAnnonce.this,
+                            "Annonce ajoutée avec succès",
+                            Toast.LENGTH_LONG).show();
+                    finish();
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Erreur lors de la création de l'annonce", Toast.LENGTH_SHORT).show()
                 );
+    }
+
+    private String encodeImageToBase64(Uri imageUri) {
+        try {
+            InputStream imageStream = getContentResolver().openInputStream(imageUri);
+            Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            selectedImage.compress(Bitmap.CompressFormat.PNG, 100, baos);
+            byte[] b = baos.toByteArray();
+
+            if (b.length > 950000) {
+                Toast.makeText(this, "L'image est trop volumineuse pour être stockée en Base64.", Toast.LENGTH_LONG).show();
+                Log.e("Base64Error", "Image trop volumineuse: " + b.length + " bytes");
+                return null;
+            }
+
+            return Base64.encodeToString(b, Base64.DEFAULT);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } catch (Exception e) {
+            Log.e("Base64Encode", "Erreur lors de l'encodage: " + e.getMessage());
+            return null;
+        }
     }
 
 
@@ -252,4 +277,23 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    // NOUVELLE MÉTHODE POUR LE GÉOCODAGE
+    private GeoPoint getLocationFromAddress(String strAddress) throws IOException {
+        // Utilise la locale par défaut (France/Français dans votre cas)
+        Geocoder coder = new Geocoder(this, Locale.getDefault());
+        List<Address> addressList;
+        GeoPoint geoPoint = null;
+
+        // Limite à 1 résultat (le plus pertinent)
+        addressList = coder.getFromLocationName(strAddress, 1);
+
+        if (addressList != null && !addressList.isEmpty()) {
+            Address location = addressList.get(0);
+            double latitude = location.getLatitude();
+            double longitude = location.getLongitude();
+            geoPoint = new GeoPoint(latitude, longitude);
+            Log.d("GEOCODING", "Adresse convertie: " + latitude + ", " + longitude);
+        }
+        return geoPoint;
+    }
 }

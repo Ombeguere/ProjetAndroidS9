@@ -10,6 +10,7 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -20,6 +21,11 @@ import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationResult;
+
+
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
@@ -36,11 +42,19 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
+
 
 public class DetailAnnonceActivity extends AppCompatActivity {
 
     private static final String TAG = "DetailAnnonceActivity";
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+
+    // Clé API Google Maps (Distance Matrix)
+    // Elle a été intégrée ici. Assurez-vous qu'elle est bien activée pour les services nécessaires.
+    private static final String API_KEY = "AIzaSyCQ7gh18X5uFjCECYn4oEfiTvoN3vRq2NU";
 
     private FirebaseFirestore db;
     private String currentAnnonceId;
@@ -60,6 +74,11 @@ public class DetailAnnonceActivity extends AppCompatActivity {
     private double annonceLat;
     private double annonceLon;
 
+    private LocationRequest locationRequest;
+    private LocationCallback locationCallback;
+
+    private Button buttonAfficherTrajet;
+
     private RecyclerView commentsRecyclerView;
     private CommentAdapter commentAdapter;
     private List<Commentaire> commentairesList;
@@ -75,6 +94,8 @@ public class DetailAnnonceActivity extends AppCompatActivity {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
+        setupLocationRequest();
+
         detailTitre = findViewById(R.id.detail_titre);
         detailPrix = findViewById(R.id.detail_prix);
         detailAdresse = findViewById(R.id.detail_adresse);
@@ -86,6 +107,8 @@ public class DetailAnnonceActivity extends AppCompatActivity {
 
         textDistance = findViewById(R.id.text_distance);
         textDureeTrajet = findViewById(R.id.text_duree_trajet);
+
+        buttonAfficherTrajet = findViewById(R.id.button_afficher_trajet);
 
         commentsRecyclerView = findViewById(R.id.comments_recycler_view);
         addCommentButton = findViewById(R.id.add_comment_button);
@@ -117,14 +140,52 @@ public class DetailAnnonceActivity extends AppCompatActivity {
         }
     }
 
+    private void setupLocationRequest() {
+        locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setNumUpdates(1);
+
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                android.location.Location location = locationResult.getLastLocation();
+                if (location != null) {
+                    traiterPositionUtilisateur(location);
+                    fusedLocationClient.removeLocationUpdates(locationCallback);
+                } else {
+                    Log.w(TAG, "LocationResult reçu, mais location est null.");
+                }
+            }
+        };
+    }
+
     @Override
-    protected void onResume() {
-        super.onResume();
-        if (currentAnnonceId != null) {
-            chargerCommentaires(currentAnnonceId);
-        }
-        if (annonceLat != 0 && currentAnnonceId != null) {
-            obtenirPositionUtilisateur();
+    protected void onPause() {
+        super.onPause();
+        fusedLocationClient.removeLocationUpdates(locationCallback);
+    }
+
+    private void traiterPositionUtilisateur(android.location.Location location) {
+        double userLat = location.getLatitude();
+        double userLon = location.getLongitude();
+
+        if (annonceLat != 0.0 && annonceLon != 0.0) {
+            calculerTrajet(userLat, userLon, annonceLat, annonceLon);
+
+            buttonAfficherTrajet.setVisibility(View.VISIBLE);
+            buttonAfficherTrajet.setOnClickListener(v ->
+                    afficherTrajetSurCarte(userLat, userLon, annonceLat, annonceLon)
+            );
+
+        } else {
+            textDistance.setText("Position de l'annonce inconnue.");
+            textDureeTrajet.setText("Position de l'annonce inconnue.");
+            buttonAfficherTrajet.setVisibility(View.GONE);
         }
     }
 
@@ -135,13 +196,19 @@ public class DetailAnnonceActivity extends AppCompatActivity {
 
             fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
                 if (location != null) {
-                    double userLat = location.getLatitude();
-                    double userLon = location.getLongitude();
-
-                    calculerTrajet(userLat, userLon, annonceLat, annonceLon);
+                    traiterPositionUtilisateur(location);
                 } else {
-                    textDistance.setText("Position indisponible.");
-                    textDureeTrajet.setText("Position indisponible.");
+                    textDistance.setText("Recherche position utilisateur...");
+                    textDureeTrajet.setText("Recherche position utilisateur...");
+                    buttonAfficherTrajet.setVisibility(View.GONE);
+
+                    try {
+                        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null);
+                    } catch (SecurityException e) {
+                        Log.e(TAG, "Erreur de sécurité lors de la demande de mise à jour de la localisation", e);
+                        textDistance.setText("Permission manquante");
+                        textDureeTrajet.setText("Permission manquante");
+                    }
                 }
             });
         } else {
@@ -158,21 +225,30 @@ public class DetailAnnonceActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 obtenirPositionUtilisateur();
             } else {
-                textDistance.setText("Permission de localisation refusée.");
-                textDureeTrajet.setText("Permission de localisation refusée.");
+                textDistance.setText("Localisation refusée.");
+                textDureeTrajet.setText("Localisation refusée.");
+                buttonAfficherTrajet.setVisibility(View.GONE);
             }
         }
     }
 
+    /**
+     * Utilise Google Distance Matrix API pour obtenir la distance et la durée du trajet.
+     */
     private void calculerTrajet(double userLat, double userLon, double annonceLat, double annonceLon) {
 
-        final String API_KEY = "AIzaSyCQ7gh18X5uFjCECYn4oEfiTvoN3vRq2NU"; // Clé API Insérée
+        // Vérification de la clé API pour le diagnostic (optionnel si la clé est toujours présente)
+        if (API_KEY.isEmpty() || API_KEY.equals("YOUR_GOOGLE_MAPS_API_KEY")) {
+            textDistance.setText("Clé API Google manquante.");
+            textDureeTrajet.setText("Clé API Google manquante.");
+            return;
+        }
 
         String origins = userLat + "," + userLon;
         String destinations = annonceLat + "," + annonceLon;
 
         String url = String.format(Locale.US,
-                "https://maps.googleapis.com/maps/api/distancematrix/json?origins=%s&destinations=%s&key=%s",
+                "https://maps.googleapis.com/maps/api/distancematrix/json?origins=%s&destinations=%s&key=%s&mode=driving",
                 origins, destinations, API_KEY);
 
         RequestQueue queue = Volley.newRequestQueue(this);
@@ -190,27 +266,68 @@ public class DetailAnnonceActivity extends AppCompatActivity {
                             String distanceText = element.getJSONObject("distance").getString("text");
                             String durationText = element.getJSONObject("duration").getString("text");
 
-                            textDistance.setText(distanceText);
-                            textDureeTrajet.setText(durationText);
+                            textDistance.setText(String.format("Distance : %s", distanceText));
+                            textDureeTrajet.setText(String.format("Durée (voiture) : %s", durationText));
                         } else {
-                            textDistance.setText("Trajet indisponible");
-                            textDureeTrajet.setText("Trajet indisponible");
+                            textDistance.setText("Trajet indisponible: " + element.getString("status"));
+                            textDureeTrajet.setText("Trajet indisponible: " + element.getString("status"));
                         }
+                    } else {
+                        textDistance.setText("Pas d'éléments de trajet.");
+                        textDureeTrajet.setText("Pas d'éléments de trajet.");
                     }
+                } else {
+                    textDistance.setText("Pas de ligne de trajet.");
+                    textDureeTrajet.setText("Pas de ligne de trajet.");
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Erreur de parsing JSON", e);
-                textDistance.setText("Erreur calcul");
-                textDureeTrajet.setText("Erreur calcul");
+                textDistance.setText("Erreur calcul (JSON)");
+                textDureeTrajet.setText("Erreur calcul (JSON)");
             }
         }, error -> {
-            Log.e(TAG, "Erreur réseau (Volley): " + error.toString());
-            textDistance.setText("Erreur réseau");
-            textDureeTrajet.setText("Erreur réseau");
+            String errorMsg = "Erreur réseau (Volley)";
+            if (error.networkResponse != null) {
+                errorMsg = "Erreur HTTP " + error.networkResponse.statusCode;
+            }
+            Log.e(TAG, "Erreur Volley: " + error.toString());
+            textDistance.setText(errorMsg);
+            textDureeTrajet.setText(errorMsg);
         });
 
         queue.add(jsonObjectRequest);
     }
+
+    /**
+     * Lance l'application Google Maps pour afficher l'itinéraire complet (Directions API).
+     */
+    private void afficherTrajetSurCarte(double startLat, double startLon, double endLat, double endLon) {
+
+        // Utilise l'Intent pour lancer la navigation Google Maps vers le point d'arrivée (le logement)
+        String mapUri = String.format(Locale.US,
+                "google.navigation:q=%f,%f&mode=d", // 'd' pour driving (voiture)
+                endLat, endLon);
+
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mapUri));
+        intent.setPackage("com.google.android.apps.maps");
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            // Option de secours: ouvre l'itinéraire dans le navigateur via l'URL classique de Maps
+            String webUri = String.format(Locale.US,
+                    "http://maps.google.com/maps?saddr=%f,%f&daddr=%f,%f",
+                    startLat, startLon, endLat, endLon);
+            Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(webUri));
+
+            if (webIntent.resolveActivity(getPackageManager()) != null) {
+                startActivity(webIntent);
+            } else {
+                Toast.makeText(this, "Aucune application de carte ou navigateur n'est installée.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
 
     private void chargerDetailsAnnonce(String annonceId) {
         db.collection("annonce").document(annonceId).get()
@@ -219,7 +336,6 @@ public class DetailAnnonceActivity extends AppCompatActivity {
                         DocumentSnapshot document = task.getResult();
                         if (document.exists()) {
                             afficherDetails(document);
-                            obtenirPositionUtilisateur();
                         } else {
                             Toast.makeText(this, "Annonce introuvable.", Toast.LENGTH_SHORT).show();
                             Log.d(TAG, "Document not found for ID: " + annonceId);
@@ -237,15 +353,17 @@ public class DetailAnnonceActivity extends AppCompatActivity {
         String titre = document.getString("titre");
         String adresse = document.getString("adresse");
         String description = document.getString("description");
-        String imageUrl = document.getString("imageUrl");
 
+        String imageUrlBase64 = document.getString("imageUrlBase64");
+
+        // Récupération de la GeoPoint
         GeoPoint location = document.getGeoPoint("location");
         if (location != null) {
             annonceLat = location.getLatitude();
             annonceLon = location.getLongitude();
         } else {
-            annonceLat = 0;
-            annonceLon = 0;
+            annonceLat = 0.0;
+            annonceLon = 0.0;
             textDistance.setText("Localisation non définie");
             textDureeTrajet.setText("Localisation non définie");
         }
@@ -275,15 +393,30 @@ public class DetailAnnonceActivity extends AppCompatActivity {
         detailPieces.setText(pieces);
         detailEquipements.setText(equipementsStr);
 
-        /*
-        if (imageUrl != null && !imageUrl.isEmpty()) {
-            Glide.with(this)
-                 .load(imageUrl)
-                 .into(detailImage);
+        if (imageUrlBase64 != null && !imageUrlBase64.isEmpty()) {
+            Bitmap imageBitmap = decodeBase64ToBitmap(imageUrlBase64);
+            if (imageBitmap != null) {
+                detailImage.setImageBitmap(imageBitmap);
+            } else {
+                detailImage.setImageResource(R.drawable.ic_launcher_background);
+            }
         } else {
-            detailImage.setImageResource(R.drawable.placeholder_image);
+            detailImage.setImageResource(R.drawable.ic_launcher_background);
         }
-        */
+
+        // Démarrer la recherche de position de l'utilisateur après avoir récupéré l'adresse de l'annonce
+        obtenirPositionUtilisateur();
+    }
+
+    private Bitmap decodeBase64ToBitmap(String base64String) {
+        if (base64String == null || base64String.isEmpty()) return null;
+        try {
+            byte[] decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
+            return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, "Chaîne Base64 invalide: " + e.getMessage());
+            return null;
+        }
     }
 
 

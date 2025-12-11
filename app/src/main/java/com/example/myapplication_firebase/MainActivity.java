@@ -13,18 +13,20 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -84,6 +86,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
+        if (mdpText.length() < 6) {
+            Toast.makeText(this, "Le mot de passe doit contenir au moins 6 caractères.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         auth.createUserWithEmailAndPassword(emailText, mdpText)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -98,37 +105,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void handleUserProfileCreation(FirebaseUser user, String nomText, String prenomText, String emailText) {
-        if (imageUri == null) {
-            saveUserToFirestore(user, nomText, prenomText, emailText, "");
-            return;
+        String base64ImageString = "";
+
+        if (imageUri != null) {
+            base64ImageString = encodeImageToBase64(imageUri);
+            if (base64ImageString == null || base64ImageString.isEmpty()) {
+                Toast.makeText(this, "Erreur d'encodage de l'image.", Toast.LENGTH_SHORT).show();
+            }
         }
 
-        StorageReference storageRef = FirebaseStorage.getInstance()
-                .getReference("profileImages/" + user.getUid() + ".jpg");
-
-        storageRef.putFile(imageUri)
-                .addOnSuccessListener(taskSnapshot -> {
-                    storageRef.getDownloadUrl()
-                            .addOnSuccessListener(uri -> {
-                                saveUserToFirestore(user, nomText, prenomText, emailText, uri.toString());
-                            })
-                            .addOnFailureListener(e -> {
-                                Toast.makeText(this, "Erreur lors de la récupération de l'URL de l'image.", Toast.LENGTH_SHORT).show();
-                                saveUserToFirestore(user, nomText, prenomText, emailText, "");
-                            });
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Erreur lors de l'upload de l'image.", Toast.LENGTH_SHORT).show();
-                    saveUserToFirestore(user, nomText, prenomText, emailText, "");
-                });
+        saveUserToFirestore(user, nomText, prenomText, emailText, base64ImageString);
     }
 
-    private void saveUserToFirestore(FirebaseUser user, String nomText, String prenomText, String emailText, String profileUrl) {
+    private String encodeImageToBase64(Uri imageUri) {
+        try {
+            InputStream imageStream = getContentResolver().openInputStream(imageUri);
+            Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            selectedImage.compress(Bitmap.CompressFormat.PNG, 100, baos);
+            byte[] b = baos.toByteArray();
+
+            return Base64.encodeToString(b, Base64.DEFAULT);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } catch (Exception e) {
+            Log.e("Base64Encode", "Erreur lors de l'encodage: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private void saveUserToFirestore(FirebaseUser user, String nomText, String prenomText, String emailText, String base64Image) {
         Map<String, Object> newUser = new HashMap<>();
         newUser.put("nom", nomText);
         newUser.put("prenom", prenomText);
         newUser.put("email", emailText);
-        newUser.put("profileUrl", profileUrl);
+        newUser.put("profileImageBase64", base64Image);
 
         db.collection("utilisateurs").document(user.getUid())
                 .set(newUser)
