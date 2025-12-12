@@ -8,11 +8,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-// L'activité doit IMPLÉMENTER l'interface AnnonceAdapter.OnItemClickListener
 public class ListActivity extends AppCompatActivity implements AnnonceAdapter.OnItemClickListener {
 
     private RecyclerView recyclerView;
@@ -33,18 +33,19 @@ public class ListActivity extends AppCompatActivity implements AnnonceAdapter.On
     }
 
     private void chargerAnnonces() {
-        db.collection("annonce").get()
+        // Ajout du tri par 'datePublication' (du plus récent au plus ancien)
+        db.collection("annonce")
+                .orderBy("datePublication", Query.Direction.DESCENDING)
+                .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         annoncesList = new ArrayList<>();
                         for (QueryDocumentSnapshot document : task.getResult()) {
-                            // Supposons que Annonce a un constructeur vide et les getters/setters nécessaires
                             Annonce annonce = document.toObject(Annonce.class);
-                            annonce.setDocumentId(document.getId()); // Essentiel : stocker l'ID
+                            annonce.setDocumentId(document.getId());
                             annoncesList.add(annonce);
                         }
 
-                        // IMPORTANT: Passer 'this' comme écouteur de clic
                         adapter = new AnnonceAdapter(annoncesList, this, this);
                         recyclerView.setAdapter(adapter);
 
@@ -54,10 +55,8 @@ public class ListActivity extends AppCompatActivity implements AnnonceAdapter.On
                 });
     }
 
-    // NOUVEAU: Implémentation de la méthode de l'interface AnnonceAdapter.OnItemClickListener
     @Override
     public void onItemClick(String annonceId) {
-        // Logique de navigation vers l'écran de détail
         Intent intent = new Intent(ListActivity.this, DetailAnnonceActivity.class);
         intent.putExtra("ANNONCE_ID", annonceId);
         startActivity(intent);

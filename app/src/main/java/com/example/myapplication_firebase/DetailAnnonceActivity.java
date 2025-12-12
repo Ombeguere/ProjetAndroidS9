@@ -52,8 +52,6 @@ public class DetailAnnonceActivity extends AppCompatActivity {
     private static final String TAG = "DetailAnnonceActivity";
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
-    // Clé API Google Maps (Distance Matrix)
-    // Elle a été intégrée ici. Assurez-vous qu'elle est bien activée pour les services nécessaires.
     private static final String API_KEY = "AIzaSyCQ7gh18X5uFjCECYn4oEfiTvoN3vRq2NU";
 
     private FirebaseFirestore db;
@@ -123,7 +121,6 @@ public class DetailAnnonceActivity extends AppCompatActivity {
 
         if (currentAnnonceId != null) {
             chargerDetailsAnnonce(currentAnnonceId);
-            chargerCommentaires(currentAnnonceId);
 
             addCommentButton.setOnClickListener(v -> {
                 String adresse = detailAdresse.getText().toString();
@@ -137,6 +134,14 @@ public class DetailAnnonceActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Erreur: ID de l'annonce manquant.", Toast.LENGTH_LONG).show();
             finish();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (currentAnnonceId != null) {
+            chargerCommentaires(currentAnnonceId);
         }
     }
 
@@ -232,20 +237,12 @@ public class DetailAnnonceActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Utilise Google Distance Matrix API pour obtenir la distance et la durée du trajet.
-     */
     private void calculerTrajet(double userLat, double userLon, double annonceLat, double annonceLon) {
-
-        // Vérification de la clé API pour le diagnostic (optionnel si la clé est toujours présente)
-        if (API_KEY.isEmpty() || API_KEY.equals("YOUR_GOOGLE_MAPS_API_KEY")) {
-            textDistance.setText("Clé API Google manquante.");
-            textDureeTrajet.setText("Clé API Google manquante.");
-            return;
-        }
 
         String origins = userLat + "," + userLon;
         String destinations = annonceLat + "," + annonceLon;
+
+        Log.d(TAG, "Requête trajet de: " + origins + " vers: " + destinations);
 
         String url = String.format(Locale.US,
                 "https://maps.googleapis.com/maps/api/distancematrix/json?origins=%s&destinations=%s&key=%s&mode=driving",
@@ -255,6 +252,23 @@ public class DetailAnnonceActivity extends AppCompatActivity {
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, response -> {
             try {
+                String status = response.getString("status");
+
+                if (!status.equals("OK")) {
+                    String detailMessage = "Statut: " + status;
+                    if (response.has("error_message")) {
+                        String errorMessage = response.getString("error_message");
+                        detailMessage += " | Détail: " + errorMessage;
+                        Log.e(TAG, "MESSAGE DÉTAILLÉ DE GOOGLE: " + errorMessage);
+                    } else {
+                        Log.e(TAG, "Statut non-OK sans message d'erreur: " + status);
+                    }
+
+                    textDistance.setText("Erreur API: " + detailMessage);
+                    textDureeTrajet.setText("Erreur API: " + status);
+                    return;
+                }
+
                 JSONArray rows = response.getJSONArray("rows");
                 if (rows.length() > 0) {
                     JSONObject row = rows.getJSONObject(0);
@@ -271,14 +285,17 @@ public class DetailAnnonceActivity extends AppCompatActivity {
                         } else {
                             textDistance.setText("Trajet indisponible: " + element.getString("status"));
                             textDureeTrajet.setText("Trajet indisponible: " + element.getString("status"));
+                            Log.w(TAG, "Element status: " + element.getString("status"));
                         }
                     } else {
                         textDistance.setText("Pas d'éléments de trajet.");
                         textDureeTrajet.setText("Pas d'éléments de trajet.");
+                        Log.w(TAG, "Empty elements array.");
                     }
                 } else {
                     textDistance.setText("Pas de ligne de trajet.");
                     textDureeTrajet.setText("Pas de ligne de trajet.");
+                    Log.w(TAG, "Empty rows array.");
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Erreur de parsing JSON", e);
@@ -298,14 +315,10 @@ public class DetailAnnonceActivity extends AppCompatActivity {
         queue.add(jsonObjectRequest);
     }
 
-    /**
-     * Lance l'application Google Maps pour afficher l'itinéraire complet (Directions API).
-     */
     private void afficherTrajetSurCarte(double startLat, double startLon, double endLat, double endLon) {
 
-        // Utilise l'Intent pour lancer la navigation Google Maps vers le point d'arrivée (le logement)
         String mapUri = String.format(Locale.US,
-                "google.navigation:q=%f,%f&mode=d", // 'd' pour driving (voiture)
+                "google.navigation:q=%f,%f&mode=d",
                 endLat, endLon);
 
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mapUri));
@@ -314,7 +327,6 @@ public class DetailAnnonceActivity extends AppCompatActivity {
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
         } else {
-            // Option de secours: ouvre l'itinéraire dans le navigateur via l'URL classique de Maps
             String webUri = String.format(Locale.US,
                     "http://maps.google.com/maps?saddr=%f,%f&daddr=%f,%f",
                     startLat, startLon, endLat, endLon);
@@ -356,7 +368,6 @@ public class DetailAnnonceActivity extends AppCompatActivity {
 
         String imageUrlBase64 = document.getString("imageUrlBase64");
 
-        // Récupération de la GeoPoint
         GeoPoint location = document.getGeoPoint("location");
         if (location != null) {
             annonceLat = location.getLatitude();
@@ -404,7 +415,6 @@ public class DetailAnnonceActivity extends AppCompatActivity {
             detailImage.setImageResource(R.drawable.ic_launcher_background);
         }
 
-        // Démarrer la recherche de position de l'utilisateur après avoir récupéré l'adresse de l'annonce
         obtenirPositionUtilisateur();
     }
 
