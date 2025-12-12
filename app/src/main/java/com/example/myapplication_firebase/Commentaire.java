@@ -1,19 +1,18 @@
 package com.example.myapplication_firebase;
 
 import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.PropertyName; // NÉCESSAIRE pour le mapping
+import com.google.firebase.firestore.PropertyName;
 
 public class Commentaire {
 
-    private String userId; // Mappe à 'userID'
+    private String userId;
     private float note;
-    private String texte; // Mappe à 'commentaire'
-    private Timestamp timestamp; // Sera rempli par FieldValue.serverTimestamp()
+    private String texte;
+    private Timestamp timestamp;
 
     public Commentaire() {
     }
 
-    // Constructeur complet (optionnel)
     public Commentaire(String userId, float note, String texte, Timestamp timestamp) {
         this.userId = userId;
         this.note = note;
@@ -21,9 +20,6 @@ public class Commentaire {
         this.timestamp = timestamp;
     }
 
-    // --- Getters et Setters pour le Mapping Firestore ---
-
-    // Mapping pour le champ 'userID' (si Firestore utilise la majuscule 'ID')
     @PropertyName("userID")
     public String getUserId() {
         return userId;
@@ -40,7 +36,6 @@ public class Commentaire {
         this.note = note;
     }
 
-    // Mapping pour le champ 'commentaire' de Firestore
     @PropertyName("commentaire")
     public String getTexte() {
         return texte;

@@ -56,7 +56,6 @@ public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceV
         public AnnonceViewHolder(View itemView) {
             super(itemView);
             imageAnnonce = itemView.findViewById(R.id.image_annonce);
-            // textAdresse est désormais utilisé pour le TITRE
             textAdresse = itemView.findViewById(R.id.text_adresse);
             textDescription = itemView.findViewById(R.id.text_description);
             textSuperficie = itemView.findViewById(R.id.text_superficie);
@@ -79,7 +78,6 @@ public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceV
         Annonce annonce = annonces.get(position);
         final String annonceId = annonce.getDocumentId();
 
-        // CORRECTION: Utiliser le titre de l'annonce
         holder.textAdresse.setText(annonce.getTitre());
 
         holder.textDescription.setText(annonce.getDescription());
@@ -87,7 +85,6 @@ public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceV
         holder.textPieces.setText(annonce.getPieces() != null ? annonce.getPieces() + " pièces" : "N/A");
         holder.ratingBar.setRating(annonce.getNoteMoyenne());
 
-        // LOGIQUE D'AFFICHAGE DE L'IMAGE BASE64
         String base64Image = annonce.getImageUrlBase64();
         if (base64Image != null && !base64Image.isEmpty()) {
             Bitmap imageBitmap = decodeBase64ToBitmap(base64Image);
@@ -163,7 +160,6 @@ public class AnnonceAdapter extends RecyclerView.Adapter<AnnonceAdapter.AnnonceV
         }
     }
 
-    // NOUVELLE MÉTHODE POUR DÉCODER LA CHAÎNE BASE64
     private Bitmap decodeBase64ToBitmap(String base64String) {
         if (base64String == null || base64String.isEmpty()) return null;
         try {

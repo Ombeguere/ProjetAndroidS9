@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import android.util.Log;
 
-// Imports nécessaires pour le géocodage
 import android.location.Address;
 import android.location.Geocoder;
 import java.util.Locale;
@@ -179,7 +178,6 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        // DÉBUT DE LA LOGIQUE DE GÉOCODAGE
         GeoPoint location;
         try {
             location = getLocationFromAddress(adr);
@@ -219,8 +217,7 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
 
         annonce.put("imageUrlBase64", base64Image);
 
-        // Utiliser la location réelle
-        annonce.put("location", location); // <--- Correction
+        annonce.put("location", location);
 
         db.collection("annonce").add(annonce)
                 .addOnSuccessListener(documentReference -> {
@@ -277,14 +274,11 @@ public class AjoutAnnonce extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    // NOUVELLE MÉTHODE POUR LE GÉOCODAGE
     private GeoPoint getLocationFromAddress(String strAddress) throws IOException {
-        // Utilise la locale par défaut (France/Français dans votre cas)
         Geocoder coder = new Geocoder(this, Locale.getDefault());
         List<Address> addressList;
         GeoPoint geoPoint = null;
 
-        // Limite à 1 résultat (le plus pertinent)
         addressList = coder.getFromLocationName(strAddress, 1);
 
         if (addressList != null && !addressList.isEmpty()) {

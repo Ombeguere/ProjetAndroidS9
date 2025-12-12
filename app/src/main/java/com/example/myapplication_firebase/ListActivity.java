@@ -33,7 +33,6 @@ public class ListActivity extends AppCompatActivity implements AnnonceAdapter.On
     }
 
     private void chargerAnnonces() {
-        // Ajout du tri par 'datePublication' (du plus récent au plus ancien)
         db.collection("annonce")
                 .orderBy("datePublication", Query.Direction.DESCENDING)
                 .get()

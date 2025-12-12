@@ -4,8 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
-import android.widget.TextView; // Ajout de l'import pour TextView
-
+import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -14,7 +13,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore; // Ajout de l'import Firestore
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentReference;
 
 import android.view.View;
@@ -23,8 +22,8 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
     private Button logoutButton;
     private Button profilButton;
     private FirebaseAuth auth;
-    private FirebaseFirestore db; // Déclaration de Firestore
-    private TextView welcomeTextView; // Déclaration du TextView
+    private FirebaseFirestore db;
+    private TextView welcomeTextView;
     private Button addLogementBtn;
     private Button viewLogementsBtn;
     private Button viewFavoritesBtn;
@@ -42,7 +41,7 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
         });
 
         auth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance(); // Initialisation de Firestore
+        db = FirebaseFirestore.getInstance();
 
         logoutButton = findViewById(R.id.logoutBtn);
         profilButton = findViewById(R.id.profilBtn);
@@ -50,7 +49,7 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
         viewLogementsBtn = findViewById(R.id.viewLogementsBtn);
         viewFavoritesBtn = findViewById(R.id.viewFavoritesBtn);
         viewOnMap = findViewById(R.id.viewMapBtn);
-        welcomeTextView = findViewById(R.id.welcomeText); // Initialisation du TextView
+        welcomeTextView = findViewById(R.id.welcomeText);
 
         logoutButton.setOnClickListener(this);
         profilButton.setOnClickListener(this);
@@ -59,13 +58,9 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
         viewFavoritesBtn.setOnClickListener(this);
         viewOnMap.setOnClickListener(this);
 
-        // Appel de la nouvelle méthode pour charger le nom
         displayWelcomeMessage();
     }
 
-    /**
-     * Charge le nom de l'utilisateur depuis Firestore et affiche le message de bienvenue.
-     */
     private void displayWelcomeMessage() {
         FirebaseUser user = auth.getCurrentUser();
         if (user != null) {
@@ -88,7 +83,6 @@ public class ApresConnexion extends AppCompatActivity implements View.OnClickLis
                 welcomeTextView.setText("Bonjour !");
             });
         } else {
-            // Ne devrait pas arriver dans ApresConnexion, mais bonne pratique de gestion d'erreur.
             welcomeTextView.setText("Bienvenue !");
         }
     }

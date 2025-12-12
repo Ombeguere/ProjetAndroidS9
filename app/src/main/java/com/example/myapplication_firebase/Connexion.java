@@ -42,7 +42,6 @@ public class Connexion extends AppCompatActivity implements View.OnClickListener
                     .build();
             FirebaseFirestore.getInstance().setFirestoreSettings(settings);
         } catch (Exception e) {
-            // Un toast ou un log ici peut être utile si la persistance échoue pour une raison quelconque
             Log.e("FirebaseInit", "Erreur lors de l'activation de la persistance Firestore", e);
         }
 

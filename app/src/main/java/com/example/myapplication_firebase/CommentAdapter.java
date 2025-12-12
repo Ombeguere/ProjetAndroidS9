@@ -46,7 +46,6 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
 
         String userId = commentaire.getUserId();
 
-        // Définir un nom temporaire en attendant la réponse asynchrone
         holder.textUserId.setText("Chargement...");
 
         // Récupérer le nom d'utilisateur depuis la collection 'utilisateurs'
@@ -66,7 +65,6 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                         }
                     })
                     .addOnFailureListener(e -> {
-                        // En cas d'échec, afficher l'ID tronqué
                         String shortId = userId.substring(0, Math.min(userId.length(), 8)) + "...";
                         holder.textUserId.setText("Utilisateur: " + shortId + " (Erreur)");
                         Log.e("CommentAdapter", "Erreur de chargement du profil pour ID: " + userId, e);
@@ -75,14 +73,9 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             holder.textUserId.setText("Utilisateur Inconnu");
         }
 
-
-        // Affichage du texte
         holder.textCommentText.setText(commentaire.getTexte());
-
-        // Affichage de la note
         holder.commentRatingBar.setRating(commentaire.getNote());
 
-        // Affichage de la date
         if (commentaire.getTimestamp() != null) {
             String date = DateFormat.format("dd MMM yyyy", commentaire.getTimestamp().toDate()).toString();
             holder.textCommentDate.setText(date);

@@ -26,7 +26,6 @@ public class MapActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Initialisation OSMdroid
         Context ctx = getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
 
@@ -46,8 +45,6 @@ public class MapActivity extends AppCompatActivity {
         chargerAnnoncesSurCarte();
     }
 
-    // Dans MapActivity.java
-
     private void chargerAnnoncesSurCarte() {
         db.collection("annonce").get()
                 .addOnCompleteListener(task -> {
@@ -55,10 +52,8 @@ public class MapActivity extends AppCompatActivity {
 
                         for (QueryDocumentSnapshot document : task.getResult()) {
 
-                            // Récupération de l'ID du document (ESSENTIEL !)
                             final String annonceId = document.getId();
 
-                            // Récupération sécurisée du titre et du prix (inchangé)
                             String titre = document.getString("titre");
                             String titreAffiche = (titre != null && !titre.isEmpty()) ? titre : "Titre Indisponible";
 
@@ -73,7 +68,6 @@ public class MapActivity extends AppCompatActivity {
                                 prixStr = "Prix Inconnu";
                             }
 
-                            // Coordonnées (à remplacer plus tard par la géolocalisation réelle)
                             double lat = 49.383430 + (Math.random() - 0.5) * 0.01;
                             double lon = 1.0773341 + (Math.random() - 0.5) * 0.01;
 
@@ -85,21 +79,14 @@ public class MapActivity extends AppCompatActivity {
                             marker.setTitle(titreAffiche + "\n" + prixStr + " €");
                             marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
 
-                            // NOUVELLE LOGIQUE : Gérer le clic sur le marqueur
                             marker.setOnMarkerClickListener((m, mapView) -> {
 
-                                // 1. Afficher la bulle d'information
                                 m.showInfoWindow();
-
-                                // 2. Lancer l'activité de détail après un court délai (ou immédiatement)
-                                // On peut lancer l'activité directement après l'affichage de l'InfoWindow
-
                                 Intent intent = new Intent(MapActivity.this, DetailAnnonceActivity.class);
-                                // On passe l'ID de l'annonce à l'activité de détail
                                 intent.putExtra("ANNONCE_ID", annonceId);
                                 startActivity(intent);
 
-                                return true; // Indique que l'événement a été consommé
+                                return true;
                             });
 
                             map.getOverlays().add(marker);

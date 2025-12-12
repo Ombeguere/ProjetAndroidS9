@@ -163,7 +163,6 @@ public class Profil extends AppCompatActivity implements View.OnClickListener{
             Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            // Compression de l'image en PNG pour la stocker
             selectedImage.compress(Bitmap.CompressFormat.PNG, 100, baos);
             byte[] b = baos.toByteArray();
 

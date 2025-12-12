@@ -15,9 +15,9 @@ public class FavoriteDbHelper extends SQLiteOpenHelper {
 
     // Constantes de la table des Favoris
     public static final String TABLE_FAVORITES = "favorites";
-    public static final String COLUMN_ID = "_id"; // Clé primaire auto-incrémentée
-    public static final String COLUMN_ANNONCE_ID = "annonce_id"; // ID du document Firestore
-    public static final String COLUMN_USER_ID = "user_id"; // UID de l'utilisateur
+    public static final String COLUMN_ID = "_id";
+    public static final String COLUMN_ANNONCE_ID = "annonce_id";
+    public static final String COLUMN_USER_ID = "user_id";
 
     private static final String SQL_CREATE_ENTRIES =
             "CREATE TABLE " + TABLE_FAVORITES + " (" +
@@ -43,9 +43,7 @@ public class FavoriteDbHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    /**
-     * Ajoute une annonce aux favoris.
-     */
+
     public boolean addFavorite(String annonceId, String userId) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -57,9 +55,7 @@ public class FavoriteDbHelper extends SQLiteOpenHelper {
         return newRowId != -1;
     }
 
-    /**
-     * Supprime une annonce des favoris.
-     */
+
     public void removeFavorite(String annonceId) {
         SQLiteDatabase db = this.getWritableDatabase();
         String selection = COLUMN_ANNONCE_ID + " = ?";
@@ -68,9 +64,7 @@ public class FavoriteDbHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    /**
-     * Vérifie si une annonce est en favori.
-     */
+
     public boolean isFavorite(String annonceId) {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] projection = {COLUMN_ANNONCE_ID};
@@ -97,8 +91,6 @@ public class FavoriteDbHelper extends SQLiteOpenHelper {
         List<String> favoriteIds = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
-        // Requête pour récupérer uniquement les IDs d'annonces
-        // On suppose que l'utilisateur est unique ou que la colonne user_id est déjà filtrée ou non nécessaire pour la lecture
         String selectQuery = "SELECT " + COLUMN_ANNONCE_ID + " FROM " + TABLE_FAVORITES;
 
         Cursor cursor = db.rawQuery(selectQuery, null);

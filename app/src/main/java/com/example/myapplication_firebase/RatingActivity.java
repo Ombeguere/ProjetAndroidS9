@@ -101,10 +101,6 @@ public class RatingActivity extends AppCompatActivity implements View.OnClickLis
             float somme = 0;
             int count = 0;
 
-            // Si vous choisissez de ne compter qu'un seul avis par utilisateur pour la moyenne,
-            // vous devriez modifier cette logique pour utiliser un Map<String, Double> pour
-            // stocker la dernière note de chaque userID avant de calculer la somme.
-            // Pour l'instant, nous conservons la logique qui inclut toutes les notes.
 
             for (DocumentSnapshot document : querySnapshot.getDocuments()) {
                 Double note = document.getDouble("note");

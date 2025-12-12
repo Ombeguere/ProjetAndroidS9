@@ -1,6 +1,6 @@
 package com.example.myapplication_firebase;
 
-import android.content.Intent; // Import nécessaire pour Intent
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -21,7 +21,6 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-// 1. IMPLÉMENTER l'interface AnnonceAdapter.OnItemClickListener
 public class FavoritesActivity extends AppCompatActivity implements AnnonceAdapter.OnItemClickListener {
 
     private RecyclerView recyclerView;
@@ -48,12 +47,11 @@ public class FavoritesActivity extends AppCompatActivity implements AnnonceAdapt
         dbHelper = new FavoriteDbHelper(this);
         mAuth = FirebaseAuth.getInstance();
 
-        recyclerView = findViewById(R.id.recycler_view_annonces); // Réutiliser l'ID du RecyclerView de ListActivity
+        recyclerView = findViewById(R.id.recycler_view_annonces);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         annoncesList = new ArrayList<>();
 
-        // 2. CORRECTION DU CONSTRUCTEUR : Ajouter 'this' comme troisième argument (le listener)
         annonceAdapter = new AnnonceAdapter(annoncesList, this, this);
         recyclerView.setAdapter(annonceAdapter);
 
@@ -71,7 +69,7 @@ public class FavoritesActivity extends AppCompatActivity implements AnnonceAdapt
     }
 
     private void fetchFavoriteAnnounces() {
-        // 1. Récupérer les IDs des favoris depuis SQLite
+        // Récupérer les IDs des favoris depuis SQLite
         List<String> favoriteIds = dbHelper.getAllFavoriteIds();
 
         if (favoriteIds.isEmpty()) {
@@ -81,10 +79,8 @@ public class FavoritesActivity extends AppCompatActivity implements AnnonceAdapt
             return;
         }
 
-        // 2. Interroger Firestore avec les IDs récupérés
-        // Attention: whereIn est limité à 10 éléments par défaut.
+        // Interroger Firestore avec les IDs récupérés
         db.collection("annonce")
-                // FieldPath.documentId() permet de filtrer par l'ID du document
                 .whereIn(FieldPath.documentId(), favoriteIds)
                 .get()
                 .addOnCompleteListener(task -> {
@@ -106,7 +102,6 @@ public class FavoritesActivity extends AppCompatActivity implements AnnonceAdapt
                 });
     }
 
-    // 3. Implémentation de la méthode de l'interface AnnonceAdapter.OnItemClickListener
     @Override
     public void onItemClick(String annonceId) {
         Log.d(TAG, "Clic sur l'annonce favorite ID: " + annonceId);
